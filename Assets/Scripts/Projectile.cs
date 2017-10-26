@@ -7,7 +7,7 @@ public class Projectile : MonoBehaviour {
     float damage = 1;
     public LayerMask collisionMask;
      
-    public void setSpeed (float newSpeed)
+    public void SetSpeed (float newSpeed)
     {
         speed = newSpeed;
     }
