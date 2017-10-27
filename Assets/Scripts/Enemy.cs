@@ -9,17 +9,19 @@ public class Enemy : LivingEntity {
 
     UnityEngine.AI.NavMeshAgent pathfinder;
     Transform target;
+    LivingEntity targetEntity;
     Material enemyMaterial;
-
     Color originalColor;
 
-    float attackDistanceThreshold = 0.5f;
-    float timeBetweenAttacks = 1.0f;
+    float attackDistanceThreshold = 0.5f;   // Minimum distance between enemy's and target's colliders for an attack to be triggered
+    float timeBetweenAttacks = 1.0f;        // Minimum time to elapse before enemy can attack again
+    float damage = 1.0f;                    // Amount of damage (health subtraction) applied to the target
 
-    float nextAttackTime;
+    float nextAttackTime;                   // Holds a running counter for when is the next time this enemy can attack
+    float enemyCollisionRadius;             // Radius of the Enemy's transform 
+    float targetCollisionRadius;            // Radius of the player's transform
 
-    float enemyCollisionRadius;
-    float targetCollisionRadius;
+    bool hasTarget;                         // Tracks whether the player is still alive
 
 	protected override void Start () {
         base.Start();
@@ -31,11 +33,34 @@ public class Enemy : LivingEntity {
         enemyMaterial = GetComponent<Renderer>().material;
         originalColor = enemyMaterial.color;
 
+
+        // Set the target and target entity to the Player
+        GameObject targetObject = GameObject.FindGameObjectWithTag("Player");
+        if (targetObject != null) {
+            target = targetObject.transform;
+            ChaseTarget();
+        }
+    }
+	
+	// Update is called once per frame
+	void Update () {
+        if (hasTarget) {
+            AttackCheck();
+        }
+    }
+
+    void OnTargetDeath() {
+        hasTarget = false;
+        currentState = EnemyState.Idle;
+    }
+
+    void ChaseTarget() {
+        hasTarget = true;
+
         // By default, Enemy should be chasing
         currentState = EnemyState.Chasing;
-
-        // Set the target to the Player's transform
-        target = GameObject.FindGameObjectWithTag("Player").transform;
+        targetEntity = target.GetComponent<LivingEntity>();
+        targetEntity.OnDeath += OnTargetDeath;
 
         // Get the radius of the Enemy and the target's game objects
         enemyCollisionRadius = GetComponent<CapsuleCollider>().radius;
@@ -43,11 +68,6 @@ public class Enemy : LivingEntity {
 
         // Start a coroutine for refreshing the Enemy's navigation against the Player's position
         StartCoroutine(UpdatePath());
-	}
-	
-	// Update is called once per frame
-	void Update () {
-        AttackCheck();
     }
 
     private void AttackCheck() {
@@ -87,8 +107,13 @@ public class Enemy : LivingEntity {
         float attackSpeed = 3.0f;
 
         enemyMaterial.color = Color.red;
+        bool hasAppliedDamage = false;
 
         while (attackPercent <= 1) {
+            if (attackPercent >= 0.5 && !hasAppliedDamage) {
+                hasAppliedDamage = true;
+                targetEntity.TakeDamage(damage);
+            }
             attackPercent += Time.deltaTime * attackSpeed;
 
             // Parabola equation: y = 4(-x^2 + x)
@@ -106,9 +131,9 @@ public class Enemy : LivingEntity {
 
     // Sets the path to which Enemy should be attempting to navigate 
     IEnumerator UpdatePath() {
-        float refreshRate = 0.25f;
+        float refreshRate = 0.5f;
 
-        while (target != null)
+        while (hasTarget)
         {
             if (currentState == EnemyState.Chasing) {
                 // Get a normalized vector for the direction to the target
