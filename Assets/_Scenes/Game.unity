@@ -283,9 +283,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waves:
-  - EnemyCount: 1
+  - EnemyCount: 3
     timeBetweenSpawns: 1
-  - EnemyCount: 10
+  - EnemyCount: 5
     timeBetweenSpawns: 0.75
   enemy: {fileID: 114883323508882816, guid: bcc5e6d1199f6224fa90d70302552294, type: 2}
 --- !u!4 &289467374
@@ -316,7 +316,7 @@ GameObject:
   m_Name: Obstacle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
+  m_NavMeshLayer: 1
   m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!23 &298894009
