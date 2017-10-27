@@ -14,6 +14,10 @@ public class LivingEntity : MonoBehaviour, IDamageable {
     }
     public void TakeHit(float damage, RaycastHit hit)
     {
+        TakeDamage(damage);
+    }
+
+    public void TakeDamage(float damage) {
         // Subtract the passed in damage from this entity's health
         health -= damage;
 
@@ -21,7 +25,6 @@ public class LivingEntity : MonoBehaviour, IDamageable {
         if (health <= 0 && !dead) {
             Die();
         }
-
     }
 
     protected void Die()
