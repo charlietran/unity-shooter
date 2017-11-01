@@ -9,8 +9,15 @@ using UnityEditor;
 // something
 public class MapEditor : Editor {
     public override void OnInspectorGUI() {
-        base.OnInspectorGUI();
         MapGenerator map = target as MapGenerator;
-        map.GenerateMap();
+        // Only re-generate the map when an inspector value changes
+        if (DrawDefaultInspector()) {
+            map.GenerateMap();
+        }
+
+        // Add a button to re-generate the map
+        if (GUILayout.Button("Generate Map")) {
+            map.GenerateMap();
+        }
     }
 }
