@@ -5,24 +5,22 @@ using UnityEngine;
 [RequireComponent (typeof(Vector2))]
 [RequireComponent (typeof(Transform))]
 public class MapGenerator : MonoBehaviour {
+    // Allow multiple maps to be defined, and one to be manually selected
+    public Map[] maps;
+    public int mapIndex;
+    Map currentMap;
+
     public Transform tilePrefab;
     public Transform obstaclePrefab;
+    public Transform navmeshFloor;
 
-    // A 2D vector that describes the dimensions of our map
-    public Vector2 mapSize;
+    public float tileSize; 
 
     float mapTopBoundary;
     float mapLeftBoundary;
 
     // This will be a shuffled queue of all possible tile coordinates
     Queue<Coord> shuffledPossibleObstacleCoords;
-
-    // The percentage of tiles that will be obstacles
-    [Range(0,1)]
-    public float obstaclePercentage = 0.5f;
-
-    // Arbitrary starting seed for our obstacle randomization
-    public int obstacleSeed = 10;
 
     // This value dictates how much to "shrink" our instantiated tiles
     [Range(0,1)]
@@ -31,32 +29,33 @@ public class MapGenerator : MonoBehaviour {
     // Used for identitifying our generated map so we can easily destroy/recreate it from our custom editor tool
     const string mapHolderName = "Generated Map";
 
-    // This will get set to the center tile of our map. Used for determining map accessibility
-    Coord mapCenter;
 
     void Start() { GenerateMap(); }
 
-    // Generates a map of our mapSize from our tilePrefabs
+    // Generates a map of our currentMap.mapSize from our tilePrefabs
     public void GenerateMap() {
-        InitPossibleObstacleCoords();
-        Transform mapHolder = CreateMapHolder();
-
-        float tileWidth = tilePrefab.transform.localScale.x;
-        float tileHeight = tilePrefab.transform.localScale.y;
+        currentMap = maps[mapIndex];
 
         // These relative positions of the top and left boundaries from our generation origin
         // Shifted inward by half a tile to compensate for center-based positioning
-        mapTopBoundary = -mapSize.y / 2.0f + 0.5f * tileHeight;
-        mapLeftBoundary = -mapSize.x / 2.0f + 0.5f * tileWidth;
+        mapTopBoundary = -currentMap.mapSize.y / 2.0f + 0.5f;
+        mapLeftBoundary = -currentMap.mapSize.x / 2.0f + 0.5f;
 
+        // Set the size of our collider and nav mesh based on tileSize
+        GetComponent<BoxCollider>().size = new Vector3(currentMap.mapSize.x * tileSize, .05f, currentMap.mapSize.y * tileSize);
+        navmeshFloor.localScale = new Vector3(currentMap.mapSize.x, currentMap.mapSize.y) * tileSize;
+
+        Transform mapHolder = CreateMapHolder();
         InstantiateTiles(mapHolder);
+
+        InitPossibleObstacleCoords();
         InstantiateObstacles(mapHolder);
     }
 
     // Loop through our map's X/Y size and instantiate a tilePrefab at each point
     private void InstantiateTiles(Transform mapHolder) {
-        for (int tileX = 0; tileX < mapSize.x; tileX++) {
-            for (int tileY = 0; tileY < mapSize.y; tileY++) {
+        for (int tileX = 0; tileX < currentMap.mapSize.x; tileX++) {
+            for (int tileY = 0; tileY < currentMap.mapSize.y; tileY++) {
                 Vector3 newTilePosition = PositionFromCoord(tileX, tileY);
                 Transform newTile = Instantiate(
                                         tilePrefab,
@@ -64,7 +63,7 @@ public class MapGenerator : MonoBehaviour {
                                         Quaternion.Euler(Vector3.right * 90)
                                     );
                 // Reduce the size of the new tile by our specified padding amount
-                newTile.localScale = Vector3.one * (1 - tilePadding);
+                newTile.localScale = Vector3.one * tileSize * (1 - tilePadding);
                 newTile.parent = mapHolder;
             }
         }
@@ -72,12 +71,14 @@ public class MapGenerator : MonoBehaviour {
 
     private void InstantiateObstacles(Transform mapHolder) {
         // 2D Array that represents our whole map, and which of its tiles are obstacles
-        bool[,] obstacleMap = new bool[(int)mapSize.x, (int)mapSize.y];
+        bool[,] obstacleMap = new bool[(int)currentMap.mapSize.x, (int)currentMap.mapSize.y];
 
-        int obstacleMax = (int)(mapSize.x * mapSize.y * obstaclePercentage);
-
-        // Counter of how mnay obstacles we've placed on the map
+        // Our max number of obstacles, based on total number of tiles and obstaclePercentage
+        int obstacleMax = (int)(currentMap.mapSize.x * currentMap.mapSize.y * currentMap.obstaclePercentage);
         int obstacleCount = 0;
+
+        // RNG used for randomizing obstacle height
+        System.Random rng = new System.Random(currentMap.obstacleSeed)
 
         for (int i = 0; i < obstacleMax; i++) {
             // Get a random coordinate and try it as an onstacle
@@ -90,8 +91,23 @@ public class MapGenerator : MonoBehaviour {
 
             if (accessible) {
                 Vector3 obstaclePosition = PositionFromCoord(randomCoord.x, randomCoord.y);
-                Transform newObstacle = Instantiate(obstaclePrefab, obstaclePosition + Vector3.up * 0.5f, Quaternion.identity);
+
+                // Randomize obstacle height based on our min / max height inputs 
+                float obstacleHeight = Mathf.Lerp(currentMap.minObstacleHeight, currentMap.maxObstacleHeight, (float)rng.NextDouble());
+
+                Transform newObstacle = Instantiate(obstaclePrefab, obstaclePosition + Vector3.up * obstacleHeight/2, Quaternion.identity);
                 newObstacle.parent = mapHolder;
+
+                float tileLength = tileSize * (1 - tilePadding);
+                newObstacle.localScale = new Vector3(tileLength, obstacleHeight, tileLength);
+
+                // Give the obstacle a color based on its position, interpolated from our defined bg/fg colors
+                // This is to create a gradient effect on the obstacles
+                Renderer obstacleRenderer = newObstacle.GetComponent<Renderer>();
+                Material obstacleMaterial = new Material(obstacleRenderer.sharedMaterial);
+                float colorPercent = randomCoord.y / (float)currentMap.mapSize.y;
+                obstacleMaterial.color = Color.Lerp(currentMap.fgColor, currentMap.bgColor, colorPercent);
+                obstacleRenderer.sharedMaterial = obstacleMaterial;
             } else {
                 obstacleMap[randomCoord.x, randomCoord.y] = false;
                 obstacleCount--;
@@ -107,14 +123,14 @@ public class MapGenerator : MonoBehaviour {
 
         // Keep an array of coordinates that we've already checked
         bool[,] validatedTiles = new bool[obstacleMapWidth, obstacleMapHeight];
-        validatedTiles[mapCenter.x, mapCenter.y] = true;
+        validatedTiles[currentMap.mapCenter.x, currentMap.mapCenter.y] = true;
 
         // Start our validation queue with the map center
-        accessibilityValidationQueue.Enqueue(mapCenter);
+        accessibilityValidationQueue.Enqueue(currentMap.mapCenter);
         int accessibleTileCount = 1;
 
         // Our desired number of accessible tiles is the total number of tiles minus the obstacle count
-        int targetAccessibleTileCount = (int)(mapSize.x * mapSize.y - obstacleCount);
+        int targetAccessibleTileCount = (int)(currentMap.mapSize.x * currentMap.mapSize.y - obstacleCount);
 
         // This while loop is a "flood fill" check for all tile availability. Starting from the center tile,
         // it checks to make sure none of its orthogonal neighbors is accessible, i.e. not an obstacle or map boundary. 
@@ -164,21 +180,19 @@ public class MapGenerator : MonoBehaviour {
 
 
     Vector3 PositionFromCoord(int x, int y) {
-        return new Vector3( mapLeftBoundary + x, 0, mapTopBoundary + y );
+        return new Vector3(mapLeftBoundary + x, 0, mapTopBoundary + y) * tileSize;
     }
 
     private void InitPossibleObstacleCoords() {
         // This list will hold all possible tile coordinates where obstacles may be instantiated
         List<Coord> possibleObstacleCoords = new List<Coord>();
 
-        mapCenter = new Coord((int)mapSize.x / 2, (int)mapSize.y / 2);
-
         // Fill the list with Coords corresponding to the dimensions of our map, excluding the center
         // (The center tile will always be available as that's the player spawning point)
-        for (int tileX = 0; tileX < mapSize.x; tileX++) {
-            for (int tileY = 0; tileY < mapSize.y; tileY++) {
+        for (int tileX = 0; tileX < currentMap.mapSize.x; tileX++) {
+            for (int tileY = 0; tileY < currentMap.mapSize.y; tileY++) {
                 // 
-                if (tileX != mapCenter.x && tileY != mapCenter.y) {
+                if (tileX != currentMap.mapCenter.x && tileY != currentMap.mapCenter.y) {
                     possibleObstacleCoords.Add(new Coord(tileX, tileY));
                 }
             }
@@ -187,7 +201,7 @@ public class MapGenerator : MonoBehaviour {
         // From the list, create a randomized queue of all possible obstacle coords
         shuffledPossibleObstacleCoords = new Queue<Coord>(
                                             Utility.ShuffleArray(
-                                                possibleObstacleCoords.ToArray(), obstacleSeed
+                                                possibleObstacleCoords.ToArray(), currentMap.obstacleSeed
                                             )
                                          );
     }
@@ -212,6 +226,7 @@ public class MapGenerator : MonoBehaviour {
         return randomCoord;
     }
 
+    [System.Serializable]
     public struct Coord {
         public int x;
         public int y;
@@ -228,5 +243,29 @@ public class MapGenerator : MonoBehaviour {
         public static bool operator != (Coord c1, Coord c2) {
             return !(c1 == c2);
         }
+    }
+
+    [System.Serializable]
+    public class Map {
+        public Coord mapSize;
+        public Color fgColor;
+        public Color bgColor;
+
+        // The percentage of tiles that will be obstacles
+        [Range(0,1)]
+        public float obstaclePercentage;
+
+        public float minObstacleHeight;
+        public float maxObstacleHeight;
+
+        // Arbitrary starting seed for our obstacle randomization
+        public int obstacleSeed = 10;
+
+        public Coord mapCenter {
+            get {
+                return new Coord(mapSize.x / 2, mapSize.y / 2);
+            }
+        }
+
     }
 }
