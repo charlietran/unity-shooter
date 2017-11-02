@@ -38,7 +38,6 @@ public class Projectile : MonoBehaviour {
         }
     }
 
-
     void CheckCollisions(float moveDistance) {
         // Create a ray at the projectile's current position and orientation
         Ray ray = new Ray(transform.position, transform.forward);

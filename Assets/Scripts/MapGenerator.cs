@@ -9,6 +9,7 @@ public class MapGenerator : MonoBehaviour {
     public Map[] maps;
     public int mapIndex;
     Map currentMap;
+    Transform mapHolder;
 
     public Transform tilePrefab;
     public Transform obstaclePrefab;
@@ -29,12 +30,20 @@ public class MapGenerator : MonoBehaviour {
     // Used for identitifying our generated map so we can easily destroy/recreate it from our custom editor tool
     const string mapHolderName = "Generated Map";
 
+    // 2D array that will hold the transform of each instantiated map tile
+    Transform[,] tileMap;
+
+    // This list and queue will hold all non-obstacle coords into which an enemy may spawn
+    List<Coord> openSpawningCoords;
+    Queue<Coord> shuffledOpenTileCoords;
 
     void Start() { GenerateMap(); }
 
     // Generates a map of our currentMap.mapSize from our tilePrefabs
     public void GenerateMap() {
         currentMap = maps[mapIndex];
+
+        tileMap = new Transform[currentMap.mapSize.x, currentMap.mapSize.y];
 
         // These relative positions of the top and left boundaries from our generation origin
         // Shifted inward by half a tile to compensate for center-based positioning
@@ -45,18 +54,21 @@ public class MapGenerator : MonoBehaviour {
         GetComponent<BoxCollider>().size = new Vector3(currentMap.mapSize.x * tileSize, .05f, currentMap.mapSize.y * tileSize);
         navmeshFloor.localScale = new Vector3(currentMap.mapSize.x, currentMap.mapSize.y) * tileSize;
 
-        Transform mapHolder = CreateMapHolder();
+        CreateMapHolder();
         InstantiateTiles(mapHolder);
 
-        InitPossibleObstacleCoords();
-        InstantiateObstacles(mapHolder);
+        InitCoords();
+        InstantiateAllObstacles();
+
+        // Create a shuffled queue of all non-obstacle tiles that an enemy can spawn into
+        shuffledOpenTileCoords = new Queue<Coord>(Utility.ShuffleArray(openSpawningCoords.ToArray(), currentMap.obstacleSeed));
     }
 
     // Loop through our map's X/Y size and instantiate a tilePrefab at each point
     private void InstantiateTiles(Transform mapHolder) {
         for (int tileX = 0; tileX < currentMap.mapSize.x; tileX++) {
             for (int tileY = 0; tileY < currentMap.mapSize.y; tileY++) {
-                Vector3 newTilePosition = PositionFromCoord(tileX, tileY);
+                Vector3 newTilePosition = CoordToPosition(tileX, tileY);
                 Transform newTile = Instantiate(
                                         tilePrefab,
                                         newTilePosition,
@@ -65,11 +77,12 @@ public class MapGenerator : MonoBehaviour {
                 // Reduce the size of the new tile by our specified padding amount
                 newTile.localScale = Vector3.one * tileSize * (1 - tilePadding);
                 newTile.parent = mapHolder;
+                tileMap[tileX, tileY] = newTile;
             }
         }
     }
 
-    private void InstantiateObstacles(Transform mapHolder) {
+    private void InstantiateAllObstacles() {
         // 2D Array that represents our whole map, and which of its tiles are obstacles
         bool[,] obstacleMap = new bool[(int)currentMap.mapSize.x, (int)currentMap.mapSize.y];
 
@@ -78,7 +91,7 @@ public class MapGenerator : MonoBehaviour {
         int obstacleCount = 0;
 
         // RNG used for randomizing obstacle height
-        System.Random rng = new System.Random(currentMap.obstacleSeed)
+        System.Random rng = new System.Random(currentMap.obstacleSeed);
 
         for (int i = 0; i < obstacleMax; i++) {
             // Get a random coordinate and try it as an onstacle
@@ -90,29 +103,40 @@ public class MapGenerator : MonoBehaviour {
             bool accessible = MapIsFullyAccessible(obstacleMap, obstacleCount);
 
             if (accessible) {
-                Vector3 obstaclePosition = PositionFromCoord(randomCoord.x, randomCoord.y);
-
-                // Randomize obstacle height based on our min / max height inputs 
-                float obstacleHeight = Mathf.Lerp(currentMap.minObstacleHeight, currentMap.maxObstacleHeight, (float)rng.NextDouble());
-
-                Transform newObstacle = Instantiate(obstaclePrefab, obstaclePosition + Vector3.up * obstacleHeight/2, Quaternion.identity);
-                newObstacle.parent = mapHolder;
-
-                float tileLength = tileSize * (1 - tilePadding);
-                newObstacle.localScale = new Vector3(tileLength, obstacleHeight, tileLength);
-
-                // Give the obstacle a color based on its position, interpolated from our defined bg/fg colors
-                // This is to create a gradient effect on the obstacles
-                Renderer obstacleRenderer = newObstacle.GetComponent<Renderer>();
-                Material obstacleMaterial = new Material(obstacleRenderer.sharedMaterial);
-                float colorPercent = randomCoord.y / (float)currentMap.mapSize.y;
-                obstacleMaterial.color = Color.Lerp(currentMap.fgColor, currentMap.bgColor, colorPercent);
-                obstacleRenderer.sharedMaterial = obstacleMaterial;
+                InstantiateObstacle(randomCoord);
             } else {
+                // If the obstacle cannot be placed, mark the obstacle map as such and undo our obstacle count increment
                 obstacleMap[randomCoord.x, randomCoord.y] = false;
                 obstacleCount--;
             }
         }
+    }
+
+    private void InstantiateObstacle(Coord randomCoord) {
+        // Randomize obstacle height based on our min / max height inputs 
+        float obstacleHeight = Mathf.Lerp(currentMap.minObstacleHeight, currentMap.maxObstacleHeight, (float)rng.NextDouble());
+
+        // Obstacle's position will be our random coord, with the center shifted upward to account for obstacle height
+        Vector3 obstaclePosition = CoordToPosition(randomCoord) + Vector3.up * obstacleHeight / 2;
+
+        // Instantiate the obstacle and nest it under our map holder
+        Transform newObstacle = Instantiate(obstaclePrefab, obstaclePosition, Quaternion.identity);
+        newObstacle.parent = mapHolder;
+
+        // Mark this coord as ineligible for enemy spawning
+        openSpawningCoords.Remove(randomCoord);
+
+        // Size our obstacle based on our given tile size and tile padding
+        float tileLength = tileSize * (1 - tilePadding);
+        newObstacle.localScale = new Vector3(tileLength, obstacleHeight, tileLength);
+
+        // Give the obstacle a color based on its position, interpolated from our defined bg/fg colors
+        // This is to create a gradient effect on the obstacles
+        Renderer obstacleRenderer = newObstacle.GetComponent<Renderer>();
+        Material obstacleMaterial = new Material(obstacleRenderer.sharedMaterial);
+        float colorPercent = randomCoord.y / (float)currentMap.mapSize.y;
+        obstacleMaterial.color = Color.Lerp(currentMap.fgColor, currentMap.bgColor, colorPercent);
+        obstacleRenderer.sharedMaterial = obstacleMaterial;
     }
 
     // Use a flood fill algorithm to make sure no part of the map is blocked off
@@ -179,11 +203,29 @@ public class MapGenerator : MonoBehaviour {
     }
 
 
-    Vector3 PositionFromCoord(int x, int y) {
-        return new Vector3(mapLeftBoundary + x, 0, mapTopBoundary + y) * tileSize;
+    // CoordToPosition translates a simple x/y Coord into a Vector3 usable for positioning game objects
+    Vector3 CoordToPosition(Coord coord) {
+        return new Vector3(mapLeftBoundary + coord.x, 0, mapTopBoundary + coord.y) * tileSize;
     }
 
-    private void InitPossibleObstacleCoords() {
+    Vector3 CoordToPosition(int x, int y) {
+        return CoordToPosition(new Coord(x, y));
+    }
+
+    // Given a position, get the transform of the tile that it's on, i.e. find out what tile a player is currently on
+    public Transform GetTileFromPosition(Vector3 position) {
+        int x = Mathf.RoundToInt(position.x / tileSize + (currentMap.mapSize.x - 1) / 2f);
+        int y = Mathf.RoundToInt(position.z / tileSize + (currentMap.mapSize.y - 1) / 2f);
+        int mapWidth = tileMap.GetLength(0);
+        int mapHeight = tileMap.GetLength(1);
+
+        // Clamp our possible return values to within the possible indexes of the tile map
+        x = Mathf.Clamp(x, 0, mapWidth - 1);
+        y = Mathf.Clamp(y, 0, mapHeight - 1);
+        return tileMap[x, y];
+    }
+
+    private void InitCoords() {
         // This list will hold all possible tile coordinates where obstacles may be instantiated
         List<Coord> possibleObstacleCoords = new List<Coord>();
 
@@ -191,12 +233,14 @@ public class MapGenerator : MonoBehaviour {
         // (The center tile will always be available as that's the player spawning point)
         for (int tileX = 0; tileX < currentMap.mapSize.x; tileX++) {
             for (int tileY = 0; tileY < currentMap.mapSize.y; tileY++) {
-                // 
                 if (tileX != currentMap.mapCenter.x && tileY != currentMap.mapCenter.y) {
                     possibleObstacleCoords.Add(new Coord(tileX, tileY));
                 }
             }
         }
+
+        // Initially, the list of all possible enemy spawning coords is the same as all possible obstacle coords
+        openSpawningCoords = possibleObstacleCoords;
 
         // From the list, create a randomized queue of all possible obstacle coords
         shuffledPossibleObstacleCoords = new Queue<Coord>(
@@ -206,12 +250,17 @@ public class MapGenerator : MonoBehaviour {
                                          );
     }
 
+    public Transform GetRandomOpenTile() {
+        Coord randomCoord = shuffledOpenTileCoords.Dequeue();
+        shuffledOpenTileCoords.Enqueue(randomCoord);
+        return tileMap[randomCoord.x, randomCoord.y];
+    }
+
     // Create an empty game object to hold our map, and nest it under our Map game object
-    Transform CreateMapHolder() {
+    void CreateMapHolder() {
         DestroyExistingMapHolder();
-        Transform mapHolder = new GameObject(mapHolderName).transform;
+        mapHolder = new GameObject(mapHolderName).transform;
         mapHolder.parent = transform;
-        return mapHolder;
     }
 
     void DestroyExistingMapHolder() {
@@ -226,6 +275,7 @@ public class MapGenerator : MonoBehaviour {
         return randomCoord;
     }
 
+    // This struct represents an x/y coordinate on our 2D tile map
     [System.Serializable]
     public struct Coord {
         public int x;

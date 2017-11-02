@@ -133,8 +133,7 @@ public class Enemy : LivingEntity {
     IEnumerator UpdatePath() {
         float refreshRate = 0.5f;
 
-        while (hasTarget)
-        {
+        while (hasTarget) {
             if (currentState == EnemyState.Chasing) {
                 // Get a normalized vector for the direction to the target
                 Vector3 directionToTarget = (target.position - transform.position).normalized;
