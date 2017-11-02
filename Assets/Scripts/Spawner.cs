@@ -27,12 +27,7 @@ public class Spawner : MonoBehaviour {
     bool playerIsCamping;
 
     void Start() {
-        playerEntity = FindObjectOfType<Player>();
-        playerTransform = playerEntity.transform;
-        playerEntity.OnDeath += OnPlayerDeath;
-
-        nextCampingCheckTime = Time.time + campingCheckInterval;
-        lastPlayerPosition = playerTransform.position;
+        PlayerSetup();
 
         mapGenerator = FindObjectOfType<MapGenerator>();
         NextWave();
@@ -40,7 +35,7 @@ public class Spawner : MonoBehaviour {
 
     void Update() {
         if (spawnerEnabled) {
-            CheckForPlayerCamping();
+            CheckPlayerCamping();
 
             bool shouldSpawn = enemiesRemainingToSpawn > 0 && Time.time > nextSpawnTime;
             if (shouldSpawn) {
@@ -49,9 +44,20 @@ public class Spawner : MonoBehaviour {
         }
     }
 
-    void CheckForPlayerCamping() {
+    void PlayerSetup() {
+        playerEntity = FindObjectOfType<Player>();
+        playerTransform = playerEntity.transform;
+        playerEntity.OnDeath += OnPlayerDeath;
+
+        // Initialize our first camping check time and player position 
+        nextCampingCheckTime = Time.time + campingCheckInterval;
+        lastPlayerPosition = playerTransform.position;
+    }
+
+    void CheckPlayerCamping() {
         if (Time.time > nextCampingCheckTime) {
             nextCampingCheckTime = Time.time + campingCheckInterval;
+            // The player is camping if they have not moved our distance theshold since we last checked their position
             playerIsCamping = (Vector3.Distance(playerTransform.position, lastPlayerPosition) < campingDistanceThreshold);
             lastPlayerPosition = playerTransform.position;
         }
@@ -81,7 +87,7 @@ public class Spawner : MonoBehaviour {
     IEnumerator FlashTile(Transform tile) {
         float flashTimer = 0;
         float flashDuration = 1.0f;
-        float flashSpeed = 4.0f;
+        float flashSpeed = 4.0f; // Arbitrary multiplier to control the file flashing speed
 
         Material tileMaterial = tile.GetComponent<Renderer>().material;
         Color initialTileColor = tileMaterial.color;
@@ -99,6 +105,7 @@ public class Spawner : MonoBehaviour {
     }
     
     void OnPlayerDeath () {
+        // Disable all spawning events, which are irrelevant / nonvalid once there is no player
         spawnerEnabled = false;
     }
 

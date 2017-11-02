@@ -134,16 +134,15 @@ public class Enemy : LivingEntity {
         float refreshRate = 0.5f;
 
         while (hasTarget) {
-            if (currentState == EnemyState.Chasing) {
+            bool shouldUpdatePath = (currentState == EnemyState.Chasing && hasTarget && !dead);
+            if (shouldUpdatePath) {
                 // Get a normalized vector for the direction to the target
                 Vector3 directionToTarget = (target.position - transform.position).normalized;
 
                 // The target position should be at the attack distance from the player
                 Vector3 targetPosition = target.position - directionToTarget * (enemyCollisionRadius + targetCollisionRadius + attackDistanceThreshold/2);
 
-                if (!dead) {
-                    pathfinder.SetDestination(targetPosition);
-                }
+                pathfinder.SetDestination(targetPosition);
             }
             yield return new WaitForSeconds(refreshRate);
         }

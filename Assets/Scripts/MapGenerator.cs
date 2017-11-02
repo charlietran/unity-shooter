@@ -103,7 +103,7 @@ public class MapGenerator : MonoBehaviour {
             bool accessible = MapIsFullyAccessible(obstacleMap, obstacleCount);
 
             if (accessible) {
-                InstantiateObstacle(randomCoord);
+                InstantiateObstacle(randomCoord, rng);
             } else {
                 // If the obstacle cannot be placed, mark the obstacle map as such and undo our obstacle count increment
                 obstacleMap[randomCoord.x, randomCoord.y] = false;
@@ -112,7 +112,7 @@ public class MapGenerator : MonoBehaviour {
         }
     }
 
-    private void InstantiateObstacle(Coord randomCoord) {
+    private void InstantiateObstacle(Coord randomCoord, System.Random rng) {
         // Randomize obstacle height based on our min / max height inputs 
         float obstacleHeight = Mathf.Lerp(currentMap.minObstacleHeight, currentMap.maxObstacleHeight, (float)rng.NextDouble());
 
