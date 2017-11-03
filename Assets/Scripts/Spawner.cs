@@ -26,6 +26,8 @@ public class Spawner : MonoBehaviour {
     Vector3 lastPlayerPosition;
     bool playerIsCamping;
 
+    public event System.Action<int> OnNewWave;
+
     void Start() {
         PlayerSetup();
 
@@ -116,14 +118,26 @@ public class Spawner : MonoBehaviour {
         }
     }
 
+    void ResetPlayerPosition() {
+        // Move the player back to slightly above the center of the map
+        playerTransform.position = mapGenerator.GetTileFromPosition(Vector3.zero).position + Vector3.up * 3;
+    }
+
     void NextWave() {
         if (currentWaveNumber < waves.Length) {
             currentWaveNumber++;
             currentWave = waves[currentWaveNumber - 1];
             enemiesRemainingToSpawn = currentWave.EnemyCount;
             enemiesRemainingAlive = enemiesRemainingToSpawn;
+
+            if (OnNewWave != null) {
+                OnNewWave(currentWaveNumber);
+            }
+
+            ResetPlayerPosition();
         }
     }
+
 
     [System.Serializable] 
     public class Wave {
