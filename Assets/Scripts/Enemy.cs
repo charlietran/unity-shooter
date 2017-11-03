@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent (typeof(UnityEngine.AI.NavMeshAgent))]
+[RequireComponent (typeof(GameObject))]
 public class Enemy : LivingEntity {
     public enum EnemyState { Idle, Chasing, Attacking }
     EnemyState currentState;
+
+    public ParticleSystem deathEffect;
 
     UnityEngine.AI.NavMeshAgent pathfinder;
     Transform target;
@@ -47,6 +50,15 @@ public class Enemy : LivingEntity {
         if (hasTarget) {
             AttackCheck();
         }
+    }
+
+    public override void TakeHit(float damage, Vector3 hitPosition, Vector3 hitDirection) {
+        if (damage >= health) {
+            Quaternion rotation = Quaternion.FromToRotation(Vector3.forward, hitDirection);
+            GameObject deathEffectInstance = Instantiate(deathEffect.gameObject, hitPosition, rotation);
+            Destroy(deathEffectInstance, deathEffect.main.startLifetime.constant);
+        }
+        base.TakeHit(damage, hitPosition, hitDirection);
     }
 
     void OnTargetDeath() {

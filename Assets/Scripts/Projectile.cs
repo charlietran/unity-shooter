@@ -34,7 +34,7 @@ public class Projectile : MonoBehaviour {
         // Find all the colliders touching our projectile at spawn time
         Collider[] initialCollisions = Physics.OverlapSphere(transform.position, 0.1f, collisionMask);
         if (initialCollisions.Length > 0) {
-            OnHitObject(initialCollisions[0]);
+            OnHitObject(initialCollisions[0], transform.position);
         }
     }
 
@@ -57,29 +57,18 @@ public class Projectile : MonoBehaviour {
         );
 
         if (hitSomething) {
-            OnHitObject(hit);
+            OnHitObject(hit.collider, hit.point);
         }
-    }
-
-    void OnHitObject(RaycastHit hit) {
-        IDamageable damageableObject = hit.collider.GetComponent<IDamageable>();
-        DamageObject(damageableObject);
     }
 
     // This overloaded OnHitObject is for CheckInitialCollisions, when we won't have a RaycastHit
-    void OnHitObject(Collider collider) {
+    void OnHitObject(Collider collider, Vector3 hitPosition) {
         IDamageable damageableObject = collider.GetComponent<IDamageable>();
-        DamageObject(damageableObject);
-    }
-
-    void DamageObject(IDamageable damageableObject) {
         if (damageableObject != null) {
-            damageableObject.TakeDamage(damage);
+            damageableObject.TakeHit(damage, hitPosition, transform.forward);
         }
-
         // gameObject is a reference to the current game object (the projectile)
         // Destroy the projectile when it hits something
         GameObject.Destroy (gameObject);
     }
-
 }
