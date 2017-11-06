@@ -21,9 +21,9 @@ GameObject:
   - component: {fileID: 4302791192579180}
   - component: {fileID: 33825990404501586}
   - component: {fileID: 23139883107104124}
-  - component: {fileID: 114045004853522778}
   - component: {fileID: 54402591029928684}
   - component: {fileID: 65168028782695164}
+  - component: {fileID: 114064507222323822}
   m_Layer: 0
   m_Name: Shell
   m_TagString: Untagged
@@ -58,7 +58,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 9ed6557a95c20fc459716ae9ba56124c, type: 2}
+  - {fileID: 2100000, guid: f224d90e9ed3547daa6df0da1e59bc54, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -112,7 +112,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 0.99999994, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &114045004853522778
+--- !u!114 &114064507222323822
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -120,9 +120,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1709994743164464}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ed77608cb459484286ccd57c43f0d53, type: 3}
+  m_Script: {fileID: 11500000, guid: 673312c04647d43d097829eb75bd9567, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  collisionMask:
-    serializedVersion: 2
-    m_Bits: 256
+  shellRigidBody: {fileID: 54402591029928684}
+  forceMin: 90
+  forceMax: 120

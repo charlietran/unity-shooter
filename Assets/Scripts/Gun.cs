@@ -9,7 +9,13 @@ public class Gun : MonoBehaviour {
     public Transform shell;
     public Transform shellEjectionPoint;
 
+    MuzzleFlash muzzleFlash;
+
     float nextShotTime;
+
+    void Start() {
+        muzzleFlash = GetComponent<MuzzleFlash>();
+    }
 
     public void Shoot() {
         if (Time.time > nextShotTime) {
@@ -19,6 +25,8 @@ public class Gun : MonoBehaviour {
 
             // Instantiate a Shell prefab at our given shellEjectionPoint position and rotation
             Instantiate(shell, shellEjectionPoint.position, shellEjectionPoint.rotation);
+
+            muzzleFlash.Activate();
         }
     }
 }
