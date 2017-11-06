@@ -9,6 +9,7 @@ public class Projectile : MonoBehaviour {
     float collisionBufferWidth = 0.1f;
 
     public LayerMask collisionMask;
+    public Color trailColor;
      
     public void SetSpeed (float newSpeed) {
         speed = newSpeed;
@@ -18,6 +19,9 @@ public class Projectile : MonoBehaviour {
         // Make sure our bullets don't live forever
         Destroy(gameObject, lifetime);
         CheckInitialCollisions();
+
+        // Set the TintColor property on our Trail Renderer's material
+        GetComponent<TrailRenderer>().sharedMaterial.SetColor("_TintColor", trailColor);
     }
 
     void Update () {

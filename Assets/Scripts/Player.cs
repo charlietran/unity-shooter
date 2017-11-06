@@ -30,17 +30,18 @@ public class Player : LivingEntity {
         Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
         float rayDistance;
 
-        if (groundPlane.Raycast(ray,out rayDistance))
-        {
+        if (groundPlane.Raycast(ray,out rayDistance)) {
             Vector3 point = ray.GetPoint(rayDistance);
             // Debug.DrawLine(ray.origin, point, Color.red); 
             controller.LookAt(point);
         }
 
         // Weapon input
-        if (Input.GetMouseButton(0))
-        {
-            gunController.Shoot();
+        if (Input.GetMouseButton(0)) {
+            gunController.OnTriggerHold();
+        }
+        if (Input.GetMouseButtonUp(0)) {
+            gunController.OnTriggerRelease();
         }
 
 	}

@@ -10,21 +10,17 @@ public class PlayerController : MonoBehaviour {
 
 	void Start () {
         myRigidBody = GetComponent<Rigidbody>();
-		
 	}
 
-    public void Move(Vector3 inputVelocity)
-    {
+    public void Move(Vector3 inputVelocity) {
         velocity = inputVelocity; 
     }
 
-    private void FixedUpdate()
-    {
+    private void FixedUpdate() {
         myRigidBody.MovePosition(myRigidBody.position + velocity * Time.fixedDeltaTime); 
     }
 
-    public void LookAt(Vector3 lookPoint)
-    {
+    public void LookAt(Vector3 lookPoint) {
         Vector3 heightCorrectedPoint = new Vector3(lookPoint.x, transform.position.y, lookPoint.z);
         transform.LookAt(heightCorrectedPoint);
     }
