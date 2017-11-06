@@ -127,13 +127,13 @@ TrailRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 2
-        time: 0.002494812
+        time: 0
         value: 0.14845443
         inSlope: 0
         outSlope: 0
         tangentMode: 0
       - serializedVersion: 2
-        time: 0.20697021
+        time: 0.10721588
         value: 0
         inSlope: 0
         outSlope: 0
@@ -191,4 +191,4 @@ MonoBehaviour:
   collisionMask:
     serializedVersion: 2
     m_Bits: 256
-  trailColor: {r: 1, g: 1, b: 1, a: 0}
+  trailColor: {r: 1, g: 0.8603448, b: 0.328, a: 0.141}
