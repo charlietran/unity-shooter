@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour {
+    public float projectileLifetime = 3.0f;
+
     float speed = 10;
     float damage = 1;
-    float lifetime = 3.0f;
     float collisionBufferWidth = 0.1f;
 
     public LayerMask collisionMask;
@@ -17,7 +18,7 @@ public class Projectile : MonoBehaviour {
 
     private void Start() {
         // Make sure our bullets don't live forever
-        Destroy(gameObject, lifetime);
+        Destroy(gameObject, projectileLifetime);
         CheckInitialCollisions();
 
         // Set the TintColor property on our Trail Renderer's material
