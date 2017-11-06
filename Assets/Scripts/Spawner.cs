@@ -19,6 +19,9 @@ public class Spawner : MonoBehaviour {
 
     LivingEntity playerEntity;
     Transform playerTransform;
+    public Cinemachine.CinemachineVirtualCamera playerCamera;
+    Vector3 initialCameraPosition;
+    Quaternion initialCameraRotation;
 
     float campingCheckInterval = 2f;
     float campingDistanceThreshold = 1.5f;
@@ -50,6 +53,8 @@ public class Spawner : MonoBehaviour {
         playerEntity = FindObjectOfType<Player>();
         playerTransform = playerEntity.transform;
         playerEntity.OnDeath += OnPlayerDeath;
+        initialCameraPosition = playerCamera.transform.position;
+        initialCameraRotation = playerCamera.transform.rotation;
 
         // Initialize our first camping check time and player position 
         nextCampingCheckTime = Time.time + campingCheckInterval;
@@ -121,6 +126,8 @@ public class Spawner : MonoBehaviour {
     void ResetPlayerPosition() {
         // Move the player back to slightly above the center of the map
         playerTransform.position = mapGenerator.GetTileFromPosition(Vector3.zero).position + Vector3.up * 3;
+        playerCamera.transform.position = initialCameraPosition;
+        playerCamera.transform.rotation = initialCameraRotation;
     }
 
     void NextWave() {
