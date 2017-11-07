@@ -49,10 +49,9 @@ public class Spawner : MonoBehaviour {
                 StartCoroutine("SpawnEnemy");
             }
 
-            if (developerMode) {
-                if (Input.GetKeyDown(KeyCode.Return)) {
-                    SkipToNextWave();
-                }
+            // If dev mode, allow skipping to next wave by pressing Enter
+            if (developerMode && Input.GetKeyDown(KeyCode.Return)) {
+                SkipToNextWave();
             }
         }
     }
@@ -61,6 +60,8 @@ public class Spawner : MonoBehaviour {
         playerEntity = FindObjectOfType<Player>();
         playerTransform = playerEntity.transform;
         playerEntity.OnDeath += OnPlayerDeath;
+        
+        // Get the initial camera position for ResetPlayerPosition
         initialCameraPosition = playerCamera.transform.position;
         initialCameraRotation = playerCamera.transform.rotation;
 
@@ -72,8 +73,10 @@ public class Spawner : MonoBehaviour {
     void CheckPlayerCamping() {
         if (Time.time > nextCampingCheckTime) {
             nextCampingCheckTime = Time.time + campingCheckInterval;
+
             // The player is camping if they have not moved our distance theshold since we last checked their position
             playerIsCamping = (Vector3.Distance(playerTransform.position, lastPlayerPosition) < campingDistanceThreshold);
+
             lastPlayerPosition = playerTransform.position;
         }
     }
@@ -106,7 +109,7 @@ public class Spawner : MonoBehaviour {
         float flashSpeed = 4.0f; // Arbitrary multiplier to control the file flashing speed
 
         Material tileMaterial = tile.GetComponent<Renderer>().material;
-        Color initialTileColor = tileMaterial.color;
+        Color initialTileColor = Color.white;
         Color flashColor = Color.red;
 
         while (flashTimer < flashDuration) {
