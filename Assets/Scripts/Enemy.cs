@@ -26,29 +26,40 @@ public class Enemy : LivingEntity {
 
     bool hasTarget;                         // Tracks whether the player is still alive
 
-	protected override void Start () {
-        base.Start();
-
-        // Set out pathfinder to the NavMeshAgent component defined on the Enemy
+    void Awake() {
+        // Set our pathfinder to the NavMeshAgent component defined on the Enemy
         pathfinder = GetComponent<UnityEngine.AI.NavMeshAgent>();
 
         // Get our current material and its starting color
         enemyMaterial = GetComponent<Renderer>().material;
         originalColor = enemyMaterial.color;
 
+        SetTarget();
+    }
 
-        // Set the target and target entity to the Player
-        GameObject targetObject = GameObject.FindGameObjectWithTag("Player");
-        if (targetObject != null) {
-            target = targetObject.transform;
-            ChaseTarget();
-        }
+    protected override void Start () {
+        base.Start();
+        ChaseTarget();
     }
 	
 	// Update is called once per frame
 	void Update () {
         if (hasTarget) {
             AttackCheck();
+        }
+    }
+    
+    public void SetCharacteristics(float moveSpeed, int hitsToKillPlayer, float enemyHealth, Color enemyColor) {
+        pathfinder.speed = moveSpeed;
+        if(hasTarget) {
+            damage = Mathf.Ceil(targetEntity.startingHealth / hitsToKillPlayer);
+            startingHealth = enemyHealth;
+            enemyMaterial = GetComponent<Renderer>().material;
+            enemyMaterial.color = enemyColor;
+
+            // Set the color of enemy's death particles
+            ParticleSystemRenderer pr = deathEffect.GetComponent<ParticleSystemRenderer>();
+            pr.sharedMaterial.color = enemyColor;
         }
     }
 
@@ -66,25 +77,36 @@ public class Enemy : LivingEntity {
         currentState = EnemyState.Idle;
     }
 
-    void ChaseTarget() {
+    void SetTarget() {
+        // Set the target and target entity to the Player
+        GameObject targetObject = GameObject.FindGameObjectWithTag("Player");
+        if (targetObject == null) {
+            return;
+        }
+
+        target = targetObject.transform;
         hasTarget = true;
-
-        // By default, Enemy should be chasing
-        currentState = EnemyState.Chasing;
         targetEntity = target.GetComponent<LivingEntity>();
-        targetEntity.OnDeath += OnTargetDeath;
 
-        // Get the radius of the Enemy and the target's game objects
+        // Get the radius of the game objects belonging to Enemy and target
         enemyCollisionRadius = GetComponent<CapsuleCollider>().radius;
         targetCollisionRadius = target.GetComponent<CapsuleCollider>().radius;
+    }
 
-        // Start a coroutine for refreshing the Enemy's navigation against the Player's position
-        StartCoroutine(UpdatePath());
+    void ChaseTarget() {
+        if(hasTarget) {
+            // By default, Enemy should be chasing
+            currentState = EnemyState.Chasing;
+            targetEntity.OnDeath += OnTargetDeath;
+
+            // Start a coroutine for refreshing the Enemy's navigation against the Player's position
+            StartCoroutine(UpdatePath());
+        }
     }
 
     private void AttackCheck() {
         // Check that enough time has passed for us to Attack
-        if (Time.time > nextAttackTime) {
+        if (hasTarget && Time.time > nextAttackTime) {
             // Use pythagorean theorum to find distance to target. This is the squared distance between the centers of both game objects
             float squareDistanceToTarget = (target.position - transform.position).sqrMagnitude;
 

@@ -6,6 +6,8 @@ public class Spawner : MonoBehaviour {
     public Wave[] waves;
     public Enemy enemy;
 
+    public bool developerMode;
+
     Wave currentWave;
     int currentWaveNumber;
 
@@ -23,8 +25,8 @@ public class Spawner : MonoBehaviour {
     Vector3 initialCameraPosition;
     Quaternion initialCameraRotation;
 
-    float campingCheckInterval = 2f;
-    float campingDistanceThreshold = 1.5f;
+    const float campingCheckInterval = 2f;
+    const float campingDistanceThreshold = 1.0f;
     float nextCampingCheckTime;
     Vector3 lastPlayerPosition;
     bool playerIsCamping;
@@ -42,9 +44,15 @@ public class Spawner : MonoBehaviour {
         if (spawnerEnabled) {
             CheckPlayerCamping();
 
-            bool shouldSpawn = enemiesRemainingToSpawn > 0 && Time.time > nextSpawnTime;
+            bool shouldSpawn = (currentWave.isInfiniteWave || enemiesRemainingToSpawn > 0) && Time.time > nextSpawnTime;
             if (shouldSpawn) {
-                StartCoroutine(SpawnEnemy());
+                StartCoroutine("SpawnEnemy");
+            }
+
+            if (developerMode) {
+                if (Input.GetKeyDown(KeyCode.Return)) {
+                    SkipToNextWave();
+                }
             }
         }
     }
@@ -84,11 +92,12 @@ public class Spawner : MonoBehaviour {
         }
 
         // Flash the tile to alert the player before spawning the enemy
-        yield return StartCoroutine(FlashTile(spawnTile));
+        yield return StartCoroutine("FlashTile",spawnTile);
 
         // Instantiate the enemy on our chosen tile, shifted upward so that its bottom is on the tile
         Enemy spawnedEnemy = Instantiate(enemy, spawnTile.position + Vector3.up, Quaternion.identity);
         spawnedEnemy.OnDeath += OnEnemyDeath;
+        spawnedEnemy.SetCharacteristics(currentWave.moveSpeed, currentWave.hitsToKillPlayer, currentWave.enemyHealth, currentWave.enemyColor);
     }
 
     IEnumerator FlashTile(Transform tile) {
@@ -105,7 +114,7 @@ public class Spawner : MonoBehaviour {
             tileMaterial.color = Color.Lerp(
                                      initialTileColor, 
                                      flashColor, 
-                                     Mathf.PingPong(flashTimer * flashSpeed, 1)
+                                     Mathf.PingPong(flashTimer * flashSpeed, 1.0f)
                                  );
             yield return null;
         }
@@ -134,7 +143,7 @@ public class Spawner : MonoBehaviour {
         if (currentWaveNumber < waves.Length) {
             currentWaveNumber++;
             currentWave = waves[currentWaveNumber - 1];
-            enemiesRemainingToSpawn = currentWave.EnemyCount;
+            enemiesRemainingToSpawn = currentWave.enemyCount;
             enemiesRemainingAlive = enemiesRemainingToSpawn;
 
             if (OnNewWave != null) {
@@ -145,10 +154,24 @@ public class Spawner : MonoBehaviour {
         }
     }
 
+    void SkipToNextWave() {
+        StopCoroutine("SpawnEnemy");
+        StopCoroutine("FlashTile");
+        foreach(Enemy enemy in FindObjectsOfType<Enemy>()) {
+            GameObject.Destroy(enemy.gameObject);
+        }
+        NextWave();
+    }
+
 
     [System.Serializable] 
     public class Wave {
-        public int EnemyCount;
+        public bool isInfiniteWave;
+        public int enemyCount;
+        public float enemyHealth;
+        public Color enemyColor;
         public float timeBetweenSpawns;
+        public float moveSpeed;
+        public int hitsToKillPlayer;
     }
 }

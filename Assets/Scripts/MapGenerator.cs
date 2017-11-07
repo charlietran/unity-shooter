@@ -6,16 +6,17 @@ using UnityEngine;
 [RequireComponent (typeof(Transform))]
 public class MapGenerator : MonoBehaviour {
     // Allow multiple maps to be defined, and one to be manually selected
-    public Map[] maps;
+    public float tileSize; 
     public int mapIndex;
+    public Map[] maps;
     Map currentMap;
     Transform mapHolder;
 
     public Transform tilePrefab;
     public Transform obstaclePrefab;
     public Transform navmeshFloor;
+    public Transform mapFloor;
 
-    public float tileSize; 
 
     float mapTopBoundary;
     float mapLeftBoundary;
@@ -58,9 +59,9 @@ public class MapGenerator : MonoBehaviour {
         mapTopBoundary = -currentMap.mapSize.y / 2.0f + 0.5f;
         mapLeftBoundary = -currentMap.mapSize.x / 2.0f + 0.5f;
 
-        // Set the size of our collider and nav mesh based on tileSize
-        GetComponent<BoxCollider>().size = new Vector3(currentMap.mapSize.x * tileSize, .05f, currentMap.mapSize.y * tileSize);
+        // Set the size of nav mesh based on tileSize
         navmeshFloor.localScale = new Vector3(currentMap.mapSize.x, currentMap.mapSize.y) * tileSize;
+        mapFloor.localScale = new Vector3(currentMap.mapSize.x * tileSize, currentMap.mapSize.y * tileSize, 0.05f);
 
         CreateMapHolder();
         InstantiateTiles(mapHolder);
@@ -326,18 +327,17 @@ public class MapGenerator : MonoBehaviour {
     [System.Serializable]
     public class Map {
         public Coord mapSize;
-        public Color fgColor;
-        public Color bgColor;
-
         // The percentage of tiles that will be obstacles
         [Range(0,1)]
         public float obstaclePercentage;
 
-        public float minObstacleHeight;
-        public float maxObstacleHeight;
-
         // Arbitrary starting seed for our obstacle randomization
         public int obstacleSeed = 10;
+
+        public float minObstacleHeight;
+        public float maxObstacleHeight;
+        public Color bgColor;
+        public Color fgColor;
 
         public Coord mapCenter {
             get {
