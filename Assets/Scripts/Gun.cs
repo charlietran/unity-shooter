@@ -38,6 +38,10 @@ public class Gun : MonoBehaviour {
         resetBurstCount();
     }
 
+    public void Aim(Vector3 aimPoint) {
+        transform.LookAt(aimPoint);
+    }
+
     void resetBurstCount() {
         shotsRemainingInBurst = burstCount;
     }
@@ -66,5 +70,4 @@ public class Gun : MonoBehaviour {
             muzzleFlash.Activate();
         }
     }
-
 }

@@ -49,6 +49,11 @@ public class Player : LivingEntity {
             playerController.LookAt(point);
             crosshairs.transform.position = point;
             crosshairs.DetectTarget(cameraRay);
+
+            float cursorDistanceFromGun = (new Vector2(point.x, point.z) - new Vector2(transform.position.x, transform.position.z)).magnitude;
+            if (cursorDistanceFromGun > 1) {
+                gunController.Aim(point);
+            }
         }
     }
 

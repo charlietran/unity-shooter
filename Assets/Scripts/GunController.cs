@@ -33,6 +33,12 @@ public class GunController : MonoBehaviour {
         }
     }
 
+
+    public void Aim(Vector3 aimPoint) {
+        if (equippedGun != null) {
+            equippedGun.Aim(aimPoint);
+        }
+    }
     // Return the y position of the gun holder object. Used for positioning the crosshair
     public float GunHeight {
         get {
