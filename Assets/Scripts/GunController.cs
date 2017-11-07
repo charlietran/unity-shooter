@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GunController : MonoBehaviour {
     public Transform weaponHold;
@@ -39,6 +37,7 @@ public class GunController : MonoBehaviour {
             equippedGun.Aim(aimPoint);
         }
     }
+
     // Return the y position of the gun holder object. Used for positioning the crosshair
     public float GunHeight {
         get {

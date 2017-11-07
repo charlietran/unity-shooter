@@ -10,8 +10,8 @@ public class Player : LivingEntity {
     public Crosshairs crosshairs;
 
     PlayerController playerController;
-    Camera viewCamera;
     GunController gunController;
+    Camera viewCamera;
 
 	protected override void Start () {
         base.Start();

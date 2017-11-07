@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 
 public class Gun : MonoBehaviour {
-
     // Firing mode
     public enum FireMode {Auto, Burst, Single}
     public FireMode fireMode;
@@ -11,7 +10,9 @@ public class Gun : MonoBehaviour {
     public Transform[] projectileSpawns;
     public Projectile projectile;
     public float msBetweenShots = 100;
-    public float muzzleVelocity = 35;
+
+    // This will override the projectile's default speed
+    public float projectileSpeed = 35;
 
     public Transform shell;
     public Transform shellEjectionPoint;
@@ -21,11 +22,21 @@ public class Gun : MonoBehaviour {
     float nextShotTime;
 
     bool triggerReleasedSinceLastShot;
-    int shotsRemainingInBurst;
+    int clipSize;
+    int shotsRemainingInClip;
 
     void Start() {
         muzzleFlash = GetComponent<MuzzleFlash>();
-        resetBurstCount();
+
+        if (fireMode == FireMode.Burst) {
+            clipSize = burstCount;
+        }
+        else if (fireMode == FireMode.Single)
+        {
+            clipSize = 1;
+        }
+
+        shotsRemainingInClip = clipSize;
     }
 
     public void OnTriggerHold() {
@@ -35,39 +46,31 @@ public class Gun : MonoBehaviour {
 
     public void OnTriggerRelease() {
         triggerReleasedSinceLastShot = true;
-        resetBurstCount();
+        shotsRemainingInClip = clipSize;
     }
 
     public void Aim(Vector3 aimPoint) {
         transform.LookAt(aimPoint);
     }
 
-    void resetBurstCount() {
-        shotsRemainingInBurst = burstCount;
-    }
-
     void Shoot() {
         if (Time.time > nextShotTime) {
-            if(fireMode == FireMode.Burst) {
-                if(shotsRemainingInBurst == 0) {
-                    return;
-                }
-                shotsRemainingInBurst--;
-            } else if(fireMode == FireMode.Single) {
-                if(!triggerReleasedSinceLastShot) {
-                    return;
-                }
+            if (fireMode != FireMode.Auto && shotsRemainingInClip == 0) {
+                return;
             }
 
-            foreach(Transform projectileSpawn in projectileSpawns) {
-                nextShotTime = Time.time + msBetweenShots / 1000;
-                Projectile newProjectile = Instantiate(projectile, projectileSpawn.position, projectileSpawn.rotation);
-                newProjectile.SetSpeed(muzzleVelocity);
-            }
-
-            // Instantiate a Shell prefab at our given shellEjectionPoint position and rotation
+            nextShotTime = Time.time + msBetweenShots / 1000;
+            InstantiateProjectiles();
             Instantiate(shell, shellEjectionPoint.position, shellEjectionPoint.rotation);
             muzzleFlash.Activate();
+        }
+    }
+
+    void InstantiateProjectiles() {
+        // For each of our projectile spawns, instantiate a projectile at our given speed
+        foreach (Transform projectileSpawn in projectileSpawns) {
+            Projectile newProjectile = Instantiate(projectile, projectileSpawn.position, projectileSpawn.rotation);
+            newProjectile.SetSpeed(projectileSpeed);
         }
     }
 }
