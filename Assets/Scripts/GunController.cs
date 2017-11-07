@@ -32,4 +32,11 @@ public class GunController : MonoBehaviour {
             equippedGun.OnTriggerRelease();
         }
     }
+
+    // Return the y position of the gun holder object. Used for positioning the crosshair
+    public float GunHeight {
+        get {
+            return weaponHold.position.y;
+        }
+    }
 }

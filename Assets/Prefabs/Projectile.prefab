@@ -191,5 +191,5 @@ MonoBehaviour:
   projectileLifetime: 1
   collisionMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 1280
   trailColor: {r: 1, g: 0.8603448, b: 0.328, a: 0.141}

@@ -7,42 +7,58 @@ using UnityEngine;
 
 public class Player : LivingEntity {
     public float moveSpeed = 5;
-    PlayerController controller;
+    public Crosshairs crosshairs;
+
+    PlayerController playerController;
     Camera viewCamera;
     GunController gunController;
 
 	protected override void Start () {
         base.Start();
-        controller = GetComponent<PlayerController> ();
+        playerController = GetComponent<PlayerController> ();
         viewCamera = Camera.main;
         gunController = GetComponent<GunController>();
 		
 	}
 	
 	void Update () {
-        // Movement input
+        MovementInput();
+        LookInput();
+        WeaponInput();
+	}
+
+    void MovementInput() {
         Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
         Vector3 moveVelocity = moveInput.normalized * moveSpeed;
-        controller.Move(moveVelocity);
+        playerController.Move(moveVelocity);
+    }
 
-        // Look Input
-        Ray ray = viewCamera.ScreenPointToRay(Input.mousePosition);
-        Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
+    void LookInput() {
+        // Make a ray from our main camera at the cursor
+        Ray cameraRay = viewCamera.ScreenPointToRay(Input.mousePosition);
+
+        // Make a plane at gun height above origin
+        Plane groundPlane = new Plane(Vector3.up, Vector3.up * gunController.GunHeight);
+
+        // Holds the distance out from Raycast
         float rayDistance;
 
-        if (groundPlane.Raycast(ray,out rayDistance)) {
-            Vector3 point = ray.GetPoint(rayDistance);
-            // Debug.DrawLine(ray.origin, point, Color.red); 
-            controller.LookAt(point);
+        // If our camera ray hits the plane, point the player at it and draw the crosshair
+        if (groundPlane.Raycast(cameraRay, out rayDistance)) {
+            Vector3 point = cameraRay.GetPoint(rayDistance);
+            playerController.LookAt(point);
+            crosshairs.transform.position = point;
+            crosshairs.DetectTarget(cameraRay);
         }
+    }
 
-        // Weapon input
+    void WeaponInput() {
         if (Input.GetMouseButton(0)) {
             gunController.OnTriggerHold();
         }
         if (Input.GetMouseButtonUp(0)) {
             gunController.OnTriggerRelease();
         }
+    }
 
-	}
 }
