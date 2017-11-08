@@ -21,7 +21,6 @@ public class Gun : MonoBehaviour {
 
     float nextShotTime;
 
-    bool triggerReleasedSinceLastShot;
     int clipSize;
     int shotsRemainingInClip;
 
@@ -41,11 +40,9 @@ public class Gun : MonoBehaviour {
 
     public void OnTriggerHold() {
         Shoot();
-        triggerReleasedSinceLastShot = false;
     }
 
     public void OnTriggerRelease() {
-        triggerReleasedSinceLastShot = true;
         shotsRemainingInClip = clipSize;
     }
 
@@ -55,10 +52,13 @@ public class Gun : MonoBehaviour {
 
     void Shoot() {
         if (Time.time > nextShotTime) {
-            if (fireMode != FireMode.Auto && shotsRemainingInClip == 0) {
-                return;
+            if (fireMode != FireMode.Auto) {
+                if (shotsRemainingInClip > 0) {
+                    shotsRemainingInClip--;
+                } else {
+                    return;
+                }
             }
-
             nextShotTime = Time.time + msBetweenShots / 1000;
             InstantiateProjectiles();
             Instantiate(shell, shellEjectionPoint.position, shellEjectionPoint.rotation);
