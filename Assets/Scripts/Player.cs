@@ -23,6 +23,7 @@ public class Player : LivingEntity {
 	
 	void Update () {
         MovementInput();
+        JumpInput();
         LookInput();
         WeaponInput();
 	}
@@ -31,6 +32,13 @@ public class Player : LivingEntity {
         Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
         Vector3 moveVelocity = moveInput.normalized * moveSpeed;
         playerController.Move(moveVelocity);
+    }
+
+    void JumpInput() {
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            playerController.Jump();
+        }
+
     }
 
     void LookInput() {

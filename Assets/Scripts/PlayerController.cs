@@ -7,13 +7,22 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
     Vector3 velocity;
     Rigidbody myRigidBody;
+    float distToGround;
 
 	void Start () {
         myRigidBody = GetComponent<Rigidbody>();
+        distToGround = GetComponent<Collider>().bounds.extents.y;
 	}
 
     public void Move(Vector3 inputVelocity) {
         velocity = inputVelocity; 
+    }
+
+    public void Jump() {
+        bool isTouchingGround = Physics.Raycast(myRigidBody.position, Vector3.down, distToGround + 0.1f);
+        if (isTouchingGround) {
+            myRigidBody.AddForce(0, 300, 0);
+        }
     }
 
     private void FixedUpdate() {
