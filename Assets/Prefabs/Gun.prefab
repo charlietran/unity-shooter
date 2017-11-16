@@ -570,6 +570,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fireMode: 2
   burstCount: 3
+  shotsPerMagazine: 12
   projectileSpawns:
   - {fileID: 4456009132665428}
   - {fileID: 4820936953204248}
@@ -580,6 +581,14 @@ MonoBehaviour:
   projectileSpeed: 20
   shell: {fileID: 4302791192579180, guid: e764e553da3684c2f90b02ff647833ab, type: 2}
   shellEjectionPoint: {fileID: 4880181162508722}
+  recoilMin: 0.05
+  recoilMax: 0.2
+  recoilAngleMin: 0
+  recoilAngleMax: 5
+  recoilSettleSpeed: 0.1
+  recoilAngleSettleSpeed: 0.1
+  reloadTime: 0.8
+  reloadAngleMax: 30
 --- !u!114 &114888294958150976
 MonoBehaviour:
   m_ObjectHideFlags: 1

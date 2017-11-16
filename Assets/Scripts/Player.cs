@@ -58,7 +58,8 @@ public class Player : LivingEntity {
             crosshairs.transform.position = point;
             crosshairs.DetectTarget(cameraRay);
 
-            float cursorDistanceFromGun = (new Vector2(point.x, point.z) - new Vector2(transform.position.x, transform.position.z)).magnitude;
+            // Aim the gun if the cursor is at least 1 unit away from the player
+            float cursorDistanceFromGun = (new Vector2(point.x, point.z) - new Vector2(transform.position.x, transform.position.z)).sqrMagnitude;
             if (cursorDistanceFromGun > 1) {
                 gunController.Aim(point);
             }
@@ -71,6 +72,9 @@ public class Player : LivingEntity {
         }
         if (Input.GetMouseButtonUp(0)) {
             gunController.OnTriggerRelease();
+        }
+        if (Input.GetKeyDown(KeyCode.R)) {
+            gunController.Reload();
         }
     }
 

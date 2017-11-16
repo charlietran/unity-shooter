@@ -38,6 +38,12 @@ public class GunController : MonoBehaviour {
         }
     }
 
+    public void Reload() {
+        if (equippedGun != null) {
+            equippedGun.Reload();
+        }
+    }
+
     // Return the y position of the gun holder object. Used for positioning the crosshair
     public float GunHeight {
         get {
