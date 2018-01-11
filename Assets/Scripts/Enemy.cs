@@ -14,8 +14,9 @@ public class Enemy : LivingEntity {
     UnityEngine.AI.NavMeshAgent pathfinder;
     Transform target;
     LivingEntity targetEntity;
-    Material enemyMaterial;
     Color originalColor;
+
+    Renderer renderer;
 
     float attackDistanceThreshold = 0.5f;   // Minimum distance between enemy's and target's colliders for an attack to be triggered
     float timeBetweenAttacks = 1.0f;        // Minimum time to elapse before enemy can attack again
@@ -30,10 +31,6 @@ public class Enemy : LivingEntity {
     void Awake() {
         // Set our pathfinder to the NavMeshAgent component defined on the Enemy
         pathfinder = GetComponent<UnityEngine.AI.NavMeshAgent>();
-
-        // Get our current material and its starting color
-        enemyMaterial = GetComponent<Renderer>().material;
-        originalColor = enemyMaterial.color;
 
         SetTarget();
     }
@@ -56,8 +53,10 @@ public class Enemy : LivingEntity {
             damage = Mathf.Ceil(targetEntity.startingHealth / hitsToKillPlayer);
             startingHealth = enemyHealth;
 
-            enemyMaterial = GetComponent<Renderer>().material;
-            enemyMaterial.color = enemyColor;
+            renderer = GetComponent<Renderer>();
+            Material sharedMaterial = renderer.sharedMaterial;
+            sharedMaterial.color = enemyColor;
+            originalColor = enemyColor;
 
             // Set the color of enemy's death particles
             ParticleSystemRenderer pr = deathEffect.GetComponent<ParticleSystemRenderer>();
@@ -155,7 +154,7 @@ public class Enemy : LivingEntity {
         float attackPercent = 0.0f;
         float attackSpeed = 3.0f;
 
-        enemyMaterial.color = Color.red;
+        renderer.material.color = Color.red;
         bool hasAppliedDamage = false;
 
         while (attackPercent <= 1) {
@@ -173,7 +172,9 @@ public class Enemy : LivingEntity {
             yield return null;
         }
 
-        enemyMaterial.color = originalColor;
+
+        renderer.material.color = originalColor;
+
         currentState = EnemyState.Chasing;
         pathfinder.enabled = true;
     }
