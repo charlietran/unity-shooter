@@ -33,6 +33,9 @@ public class Player : LivingEntity {
         JumpInput();
         LookInput();
         WeaponInput();
+        if (transform.position.y < -5f) {
+            TakeDamage(health);
+        }
 	}
 
     void OnNewWave(int waveNumber) {
