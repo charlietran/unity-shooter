@@ -9,6 +9,7 @@ public class Enemy : LivingEntity {
     EnemyState currentState;
 
     public ParticleSystem deathEffect;
+    public static event System.Action OnDeathStatic;
 
     UnityEngine.AI.NavMeshAgent pathfinder;
     Transform target;
@@ -66,7 +67,7 @@ public class Enemy : LivingEntity {
 
     public override void TakeHit(float damage, Vector3 hitPosition, Vector3 hitDirection) {
         AudioManager.instance.PlaySound("Impact", hitPosition);
-        if (damage >= health) {
+        if (damage >= health && !dead) {
             AudioManager.instance.PlaySound("EnemyDeath", hitPosition);
             Quaternion rotation = Quaternion.FromToRotation(Vector3.forward, hitDirection);
             GameObject deathEffectInstance = Instantiate(
@@ -78,6 +79,9 @@ public class Enemy : LivingEntity {
                 deathEffectInstance, 
                 deathEffect.main.startLifetime.constant
             );
+            if (OnDeathStatic != null) {
+                OnDeathStatic();
+            }
         }
         base.TakeHit(damage, hitPosition, hitDirection);
     }
