@@ -39,6 +39,7 @@ public class AudioManager : MonoBehaviour {
         for (int i = 0; i < 2; i++) {
             GameObject newMusicSource = new GameObject("Music source " + (i + 1));
             musicSources[i] = newMusicSource.AddComponent<AudioSource>();
+            musicSources[i].loop = true;
             newMusicSource.transform.parent = transform;
         }
 

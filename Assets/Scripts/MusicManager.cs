@@ -38,7 +38,6 @@ public class MusicManager : MonoBehaviour {
 
         if (clip != null) {
             AudioManager.instance.PlayMusic(clip, 2);
-			Invoke("PlayMusic", clip.length);
         }
     }
 
