@@ -8,7 +8,7 @@ public class Spawner : MonoBehaviour {
 
     public bool developerMode;
 
-    Wave currentWave;
+    [HideInInspector] public Wave currentWave;
     int currentWaveNumber;
 
     bool spawnerEnabled = true;
