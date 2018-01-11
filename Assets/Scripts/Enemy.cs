@@ -54,13 +54,15 @@ public class Enemy : LivingEntity {
             startingHealth = enemyHealth;
 
             renderer = GetComponent<Renderer>();
-            Material sharedMaterial = renderer.sharedMaterial;
-            sharedMaterial.color = enemyColor;
+            renderer.material.color = enemyColor;
             originalColor = enemyColor;
 
             // Set the color of enemy's death particles
-            ParticleSystemRenderer pr = deathEffect.GetComponent<ParticleSystemRenderer>();
-            pr.sharedMaterial.color = enemyColor;
+            ParticleSystem.MainModule main = deathEffect.main;
+            main.startColor = new Color(enemyColor.r, enemyColor.g, enemyColor.b, 1);
+
+            // ParticleSystemRenderer pr = deathEffect.GetComponent<ParticleSystemRenderer>();
+            // pr.sharedMaterial.color = enemyColor;
         }
     }
 
@@ -119,7 +121,7 @@ public class Enemy : LivingEntity {
 
     private void AttackCheck() {
         // Check that enough time has passed for us to Attack
-        if (hasTarget && Time.time > nextAttackTime) {
+        if (hasTarget && Time.time > nextAttackTime && target != null) {
             // Use pythagorean theorum to find distance to target. This is the squared distance between the centers of both game objects
             float squareDistanceToTarget = (target.position - transform.position).sqrMagnitude;
 
