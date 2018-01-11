@@ -7,7 +7,6 @@ public class AudioLibrary : MonoBehaviour {
 
     void Awake() {
         foreach (SoundGroup soundGroup in soundGroups) {
-			Debug.Log("Adding " + soundGroup.groupName);
             groupDictionary.Add(soundGroup.groupName, soundGroup.clips);
         }
     }

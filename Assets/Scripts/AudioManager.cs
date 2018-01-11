@@ -1,14 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class AudioManager : MonoBehaviour {
-    public float masterVolumePercent = 0.5f;
-    public float sfxVolumePercent = 1f;
-    public float musicVolumePercent = 1f;
-	public Transform audioListenerTransform;
-	public Transform playerTransform;
+    public float masterVolumePercent { get; private set; }
+    public float sfxVolumePercent { get; private set; }
+    public float musicVolumePercent { get; private set; }
 
+    public Transform audioListenerTransform;
+
+    Transform playerTransform;
     AudioSource[] musicSources;
     AudioSource globalSoundSource;
     int activeMusicSourceIndex;
@@ -16,11 +18,19 @@ public class AudioManager : MonoBehaviour {
 
     public static AudioManager instance;
 
+    void OnEnable() {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable() {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
     void Awake() {
         if (instance != null) {
             Destroy(gameObject);
             return;
-        } 
+        }
 
         instance = this;
         DontDestroyOnLoad(gameObject);
@@ -32,22 +42,32 @@ public class AudioManager : MonoBehaviour {
             newMusicSource.transform.parent = transform;
         }
 
+        if (FindObjectOfType<Player>() != null) {
+            playerTransform = FindObjectOfType<Player>().transform;
+        }
+
         GameObject globalSoundSourceObject = new GameObject("Global Sound Source");
         globalSoundSource = globalSoundSourceObject.AddComponent<AudioSource>();
         globalSoundSourceObject.transform.parent = transform;
 
-        masterVolumePercent = PlayerPrefs.GetFloat("MasterVolume", masterVolumePercent);
-        sfxVolumePercent = PlayerPrefs.GetFloat("SfxVolume", sfxVolumePercent);
-        musicVolumePercent = PlayerPrefs.GetFloat("MusicVolume", musicVolumePercent);
+        masterVolumePercent = PlayerPrefs.GetFloat("MasterVolume", 0.5f);
+        sfxVolumePercent = PlayerPrefs.GetFloat("SfxVolume", 1f);
+        musicVolumePercent = PlayerPrefs.GetFloat("MusicVolume", 1f);
 
         library = GetComponent<AudioLibrary>();
     }
 
-	void Update() {
-		if (playerTransform != null) {
-			audioListenerTransform.position = playerTransform.position;
-		}
-	}
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+        if (FindObjectOfType<Player>() != null) {
+            playerTransform = FindObjectOfType<Player>().transform;
+        }
+    }
+
+    void Update() {
+        if (playerTransform != null) {
+            audioListenerTransform.position = playerTransform.position;
+        }
+    }
 
     public void PlayMusic(AudioClip clip, float fadeDuration = 1) {
         activeMusicSourceIndex = 1 - activeMusicSourceIndex;
@@ -68,9 +88,9 @@ public class AudioManager : MonoBehaviour {
         }
     }
 
-    public enum AudioChannel {Master, Sfx, Music};
+    public enum AudioChannel { Master, Sfx, Music };
     public void SetVolume(float volumePercent, AudioChannel audioChannel) {
-        switch(audioChannel) {
+        switch (audioChannel) {
             case AudioChannel.Master:
                 masterVolumePercent = volumePercent;
                 break;
@@ -89,6 +109,7 @@ public class AudioManager : MonoBehaviour {
         PlayerPrefs.SetFloat("MasterVolume", masterVolumePercent);
         PlayerPrefs.SetFloat("SfxVolume", sfxVolumePercent);
         PlayerPrefs.SetFloat("MusicVolume", musicVolumePercent);
+        PlayerPrefs.Save();
     }
 
     public void PlaySound(AudioClip clip, Vector3 position) {
