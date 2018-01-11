@@ -7,10 +7,10 @@ public class Shell : MonoBehaviour {
   public float forceMax;
 
   // Defines the amount of time to wait before the shell is faded out and destroyed
-  const float lifetime = 4f;
+  const float lifetime = 2f;
 
   // Defines how long in seconds the shell fadeout will take
-  const float fadeTime = 2f;
+  const float fadeTime = 1f;
 
   void Start() {
     float force = Random.Range(forceMin, forceMax);
