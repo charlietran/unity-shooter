@@ -22481,7 +22481,7 @@ MonoBehaviour:
   m_LockStageInInspector: 
   m_Priority: 10
   m_LookAt: {fileID: 0}
-  m_Follow: {fileID: 87190864}
+  m_Follow: {fileID: 0}
   m_Lens:
     FieldOfView: 35.5
     OrthographicSize: 10
