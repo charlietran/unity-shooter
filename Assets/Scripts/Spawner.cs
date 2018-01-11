@@ -127,6 +127,7 @@ public class Spawner : MonoBehaviour {
                                  );
             yield return null;
         }
+        tileMaterial.color = initialTileColor;
     }
     
     void OnPlayerDeath () {
