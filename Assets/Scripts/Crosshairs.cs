@@ -12,6 +12,13 @@ public class Crosshairs : MonoBehaviour {
         initialDotColor = dot.color;
         initialScale = dot.transform.localScale;
         Cursor.visible = false;
+
+        LivingEntity playerEntity = FindObjectOfType<Player>();
+        playerEntity.OnDeath += OnPlayerDeath;
+    }
+
+    void OnPlayerDeath() {
+        Cursor.visible = true;
     }
 
     void Update() {
