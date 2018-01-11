@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraManager : MonoBehaviour {
-	public Transform virtualCameraTransform;
-	public Transform playerTransform;
-	Cinemachine.CinemachineVirtualCamera virtualCamera;
+    public Transform virtualCameraTransform;
+    Cinemachine.CinemachineVirtualCamera virtualCamera;
 
-	void Awake() {
-		virtualCamera = virtualCameraTransform.GetComponent<Cinemachine.CinemachineVirtualCamera>();
-		virtualCamera.Follow = playerTransform;
-	}
+    Player player;
+
+    void Start() {
+        player = FindObjectOfType<Player>();
+        if (player != null) {
+            virtualCamera = virtualCameraTransform.GetComponent<Cinemachine.CinemachineVirtualCamera>();
+            virtualCamera.Follow = player.transform;
+        }
+    }
 }
