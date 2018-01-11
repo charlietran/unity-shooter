@@ -54,6 +54,7 @@ public class Enemy : LivingEntity {
         if(hasTarget) {
             damage = Mathf.Ceil(targetEntity.startingHealth / hitsToKillPlayer);
             startingHealth = enemyHealth;
+
             enemyMaterial = GetComponent<Renderer>().material;
             enemyMaterial.color = enemyColor;
 
@@ -64,10 +65,19 @@ public class Enemy : LivingEntity {
     }
 
     public override void TakeHit(float damage, Vector3 hitPosition, Vector3 hitDirection) {
+        AudioManager.instance.PlaySound("Impact", hitPosition);
         if (damage >= health) {
+            AudioManager.instance.PlaySound("EnemyDeath", hitPosition);
             Quaternion rotation = Quaternion.FromToRotation(Vector3.forward, hitDirection);
-            GameObject deathEffectInstance = Instantiate(deathEffect.gameObject, hitPosition, rotation);
-            Destroy(deathEffectInstance, deathEffect.main.startLifetime.constant);
+            GameObject deathEffectInstance = Instantiate(
+                deathEffect.gameObject, 
+                hitPosition, 
+                rotation
+            );
+            Destroy(
+                deathEffectInstance, 
+                deathEffect.main.startLifetime.constant
+            );
         }
         base.TakeHit(damage, hitPosition, hitDirection);
     }
@@ -125,6 +135,7 @@ public class Enemy : LivingEntity {
     }
 
     IEnumerator Attack() {
+        AudioManager.instance.PlaySound("EnemyAttack", transform.position);
         // Disable pathfinding while we're attacking so it doesn't interfere ith our attack positioning
         pathfinder.enabled = false;
         currentState = EnemyState.Attacking;

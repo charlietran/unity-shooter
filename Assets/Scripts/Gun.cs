@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Gun : MonoBehaviour {
     // Firing mode
-    public enum FireMode {Auto, Burst, Single}
+    public enum FireMode { Auto, Burst, Single }
     public FireMode fireMode;
     public int burstCount;
     public int shotsPerMagazine;
@@ -29,12 +29,18 @@ public class Gun : MonoBehaviour {
     public float recoilSettleSpeed;
     public float recoilAngleSettleSpeed;
 
+    [Header("Sound Effects")]
+    public AudioClip shootAudio;
+    public AudioClip reloadAudio;
+
     MuzzleFlash muzzleFlash;
 
     float nextShotTime;
 
+    [Header("Reloading")]
     public float reloadTime = 0.3f;
     public float reloadAngleMax = 30f;
+
     int burstSize;
     int shotsRemainingInBurst;
     int shotsRemainingInMagazine;
@@ -85,6 +91,7 @@ public class Gun : MonoBehaviour {
     public void Reload() {
         if (shotsRemainingInMagazine != shotsPerMagazine) {
             StartCoroutine(AnimateReload());
+            AudioManager.instance.PlaySound(reloadAudio, transform.position);
         }
     }
 
@@ -92,7 +99,7 @@ public class Gun : MonoBehaviour {
         isReloading = true;
 
         float percent = 0;
-        float speed = 1/reloadTime;
+        float speed = 1 / reloadTime;
         initialRotation = transform.localEulerAngles;
         while (percent < 1f) {
             percent += Time.deltaTime * speed;
@@ -118,8 +125,7 @@ public class Gun : MonoBehaviour {
         if (fireMode != FireMode.Auto) {
             if (shotsRemainingInBurst > 0) {
                 shotsRemainingInBurst--;
-            }
-            else {
+            } else {
                 return;
             }
         }
@@ -133,6 +139,8 @@ public class Gun : MonoBehaviour {
         transform.localPosition -= Vector3.forward * Random.Range(recoilMin, recoilMax);
         recoilAngle += Random.Range(recoilAngleMin, recoilAngleMax);
         recoilAngle = Mathf.Clamp(recoilAngle, 0, 30);
+
+        AudioManager.instance.PlaySound(shootAudio, transform.position);
     }
 
     void InstantiateProjectiles() {
@@ -141,7 +149,11 @@ public class Gun : MonoBehaviour {
             if (shotsRemainingInMagazine == 0) {
                 break;
             }
-            Projectile newProjectile = Instantiate(projectile, projectileSpawn.position, projectileSpawn.rotation);
+            Projectile newProjectile = Instantiate(
+                projectile,
+                projectileSpawn.position,
+                projectileSpawn.rotation
+            );
             shotsRemainingInMagazine--;
             newProjectile.SetSpeed(projectileSpeed);
         }

@@ -16,6 +16,7 @@ public class Spawner : MonoBehaviour {
     int enemiesRemainingToSpawn;
     int enemiesRemainingAlive;
     float nextSpawnTime;
+    public int infiniteEnemiesCap = 20;
 
     MapGenerator mapGenerator;
 
@@ -44,8 +45,7 @@ public class Spawner : MonoBehaviour {
         if (spawnerEnabled) {
             CheckPlayerCamping();
 
-            bool shouldSpawn = (currentWave.isInfiniteWave || enemiesRemainingToSpawn > 0) && Time.time > nextSpawnTime;
-            if (shouldSpawn) {
+            if (ShouldSpawn()) {
                 StartCoroutine("SpawnEnemy");
             }
 
@@ -54,6 +54,12 @@ public class Spawner : MonoBehaviour {
                 SkipToNextWave();
             }
         }
+    }
+
+    bool ShouldSpawn() {
+        bool isInfinite = currentWave.isInfiniteWave && enemiesRemainingAlive <= infiniteEnemiesCap;
+        bool intervalReached = Time.time > nextSpawnTime;
+        return (isInfinite || enemiesRemainingToSpawn > 0) && intervalReached;
     }
 
     void PlayerSetup() {
@@ -143,6 +149,9 @@ public class Spawner : MonoBehaviour {
     }
 
     void NextWave() {
+        if (currentWaveNumber > 0) {
+            AudioManager.instance.PlaySound("WaveComplete");
+        }
         if (currentWaveNumber < waves.Length) {
             currentWaveNumber++;
             currentWave = waves[currentWaveNumber - 1];

@@ -13,12 +13,19 @@ public class Player : LivingEntity {
     GunController gunController;
     Camera viewCamera;
 
-	protected override void Start () {
-        base.Start();
+    public static Player instance;
+
+    void Awake() {
+        instance = this;
+
         playerController = GetComponent<PlayerController> ();
         viewCamera = Camera.main;
         gunController = GetComponent<GunController>();
-		
+        FindObjectOfType<Spawner>().OnNewWave += OnNewWave;
+    }
+
+	protected override void Start () {
+        base.Start();
 	}
 	
 	void Update () {
@@ -27,6 +34,12 @@ public class Player : LivingEntity {
         LookInput();
         WeaponInput();
 	}
+
+    void OnNewWave(int waveNumber) {
+        health = startingHealth;
+        gunController.EquipGun(waveNumber - 1);
+        
+    }
 
     void MovementInput() {
         Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
@@ -76,6 +89,11 @@ public class Player : LivingEntity {
         if (Input.GetKeyDown(KeyCode.R)) {
             gunController.Reload();
         }
+    }
+
+    public override void Die() {
+        base.Die();
+        AudioManager.instance.PlaySound("PlayerDeath", transform.position);
     }
 
 }
