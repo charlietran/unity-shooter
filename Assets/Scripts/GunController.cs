@@ -3,12 +3,10 @@
 public class GunController : MonoBehaviour {
     public Transform weaponHold;
     public Gun startingGun;
+    public Gun[] allGuns;
     Gun equippedGun;
 
     void Start() {
-        if (startingGun != null) {
-            EquipGun(startingGun);
-        }
     }
 
     public void EquipGun(Gun gunToEquip) {
@@ -17,6 +15,10 @@ public class GunController : MonoBehaviour {
         }
         equippedGun = Instantiate(gunToEquip, weaponHold.position, weaponHold.rotation);
         equippedGun.transform.parent = weaponHold;
+    }
+
+    public void EquipGun(int gunIndex) {
+        EquipGun(allGuns[gunIndex]);
     }
 
     public void OnTriggerHold() {
@@ -30,7 +32,6 @@ public class GunController : MonoBehaviour {
             equippedGun.OnTriggerRelease();
         }
     }
-
 
     public void Aim(Vector3 aimPoint) {
         if (equippedGun != null) {

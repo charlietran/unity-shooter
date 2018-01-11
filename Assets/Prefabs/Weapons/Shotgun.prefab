@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 114081854730329630}
   - component: {fileID: 114888294958150976}
   m_Layer: 0
-  m_Name: Gun
+  m_Name: Shotgun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -587,6 +587,8 @@ MonoBehaviour:
   recoilAngleMax: 5
   recoilSettleSpeed: 0.1
   recoilAngleSettleSpeed: 0.1
+  shootAudio: {fileID: 8300000, guid: 23aac3b2e29cb894091c27ed3fc5f8c2, type: 3}
+  reloadAudio: {fileID: 8300000, guid: cb56425003a0bcf4eb5b27ba32e3acee, type: 3}
   reloadTime: 0.8
   reloadAngleMax: 30
 --- !u!114 &114888294958150976
