@@ -12,6 +12,8 @@ public class MenuManager : MonoBehaviour {
 
     public Toggle fullscreenToggle;
 
+    public Image bgImage;
+
     Resolution[] screenResolutions;
     Resolution[] uniqueScreenResolutions;
 
@@ -19,6 +21,10 @@ public class MenuManager : MonoBehaviour {
         LoadPlayerPrefs();
         SetupResolutions();
         MainMenu();
+    }
+
+    void Update() {
+        bgImage.transform.Rotate(0, 0, Time.deltaTime);
     }
 
     public void Play() {
